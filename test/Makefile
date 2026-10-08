@@ -4,6 +4,8 @@
 # defaults
 SIM ?= icarus
 FST ?= -fst # Use more efficient FST format
+IVERILOG = iverilog
+VVP = vvp
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 PROJECT_SOURCES = project.v
@@ -31,6 +33,7 @@ VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
 endif
 
+
 # Allow sharing configuration between design and testbench via `include`:
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
@@ -38,8 +41,16 @@ COMPILE_ARGS 		+= -I$(SRC_DIR)
 VERILOG_SOURCES += $(PWD)/tb.v
 TOPLEVEL = tb
 
+sim:
+	mkdir -p $(SIM_BUILD)
+	$(IVERILOG) -g2012 $(COMPILE_ARGS) -o $(SIM_BUILD)/sim.vvp $(VERILOG_SOURCES)
+	$(VVP) $(SIM_BUILD)/sim.vvp
+
+clean:
+	rm -rf sim_build
+
 # List test modules to run, separated by commas and without the .py suffix:
-COCOTB_TEST_MODULES = test
+#COCOTB_TEST_MODULES = test
 
 # include cocotb's make rules to take care of the simulator setup
-include $(shell cocotb-config --makefiles)/Makefile.sim
+#include $(shell cocotb-config --makefiles)/Makefile.sim
