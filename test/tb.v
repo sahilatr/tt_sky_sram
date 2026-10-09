@@ -175,10 +175,12 @@ module tb;
         );
 
         repeat (2) @(negedge clk);
+        begin
         $display("=====================================================================");
         $display("             ALL 256-BIT MATRIX OPERATIONS VERIFIED                  ");
         $display("=====================================================================\n");
-        #100 $finish;
+        $finish;
+        end
     end
 
 endmodule
