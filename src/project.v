@@ -31,6 +31,11 @@ endmodule
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/*
+ * Copyright (c) 2026 Sahil Sexsena
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 `default_nettype none
 
 module tt_um_example (
