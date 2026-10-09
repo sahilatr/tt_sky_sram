@@ -178,7 +178,7 @@ module tb;
         $display("=====================================================================");
         $display("             ALL 256-BIT MATRIX OPERATIONS VERIFIED                  ");
         $display("=====================================================================\n");
-        $finish;
+        #100 $finish;
     end
 
 endmodule
