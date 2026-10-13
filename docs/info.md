@@ -39,11 +39,11 @@ You can also include images in this folder and reference them in the markdown. E
 <img width="1622" height="647" alt="Screenshot 2026-10-13 at 2 19 59 PM" src="https://github.com/user-attachments/assets/9c7e6b54-5a18-489f-876f-b29dd55055e1" />
 
 Section 1: Control Pins, Ingestion & 8-Bit XOR Engine
-      Input Signal Interfacing: Handles primary control inputs (clk, rst_n, ena/cs) and the 4-bit data bus (ui_in[3:0]/data_in[3:0]).
+Input Signal Interfacing: Handles primary control inputs (clk, rst_n, ena/cs) and the 4-bit data bus (ui_in[3:0]/data_in[3:0]).
 
-      Ingestion Buffering & Phase Tagging: Samples the incoming 4-bit nibble into an internal buffer register (msb_buf) on Clock 1 and uses a phase tracker (nibble_phase) to concatenate the full 8-bit byte upon arrival of       the lower nibble on Clock 2.
+Ingestion Buffering & Phase Tagging: Samples the incoming 4-bit nibble into an internal buffer register (msb_buf) on Clock 1 and uses a phase tracker (nibble_phase) to concatenate the full 8-bit byte upon arrival of       the lower nibble on Clock 2.
 
-      Parallel XOR Encryption: Passes the assembled 8-bit vector into an 8-bit parallel XOR encryption engine keyed with the symmetric secret key 0xAA (8'b1010_1010).
+Parallel XOR Encryption: Passes the assembled 8-bit vector into an 8-bit parallel XOR encryption engine keyed with the symmetric secret key 0xAA (8'b1010_1010).
 
 Encrypted Bus Driving: Emits the encrypted 8-bit payload onto a dedicated parallel internal data bus (pins [7:0]) directed to the memory matrix.
 
