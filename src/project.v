@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_qspi_sram (
+module tt_um_example (
     input  wire [7:0] ui_in,    // [3:0]=data_in, [7:4]=dec_wr_addr[3:0]
     output wire [7:0] uo_out,   // [7:0]=data_out[7:0]
     input  wire [7:0] uio_in,   // [0]=dec_wr_addr[4], [1]=wen, [2]=ren, [7:3]=dec_rd_addr[4:0]
