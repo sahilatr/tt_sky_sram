@@ -11,39 +11,39 @@ You can also include images in this folder and reference them in the markdown. E
 ==>> Pinout Grouping & Bus Summary:
 1. Dedicated Inputs (ui_in[7:0]):
 
-ui_in[3:0]: 4-bit data bus (data_in[3:0]) for sequential nibble ingestion (Clock 1: MSB nibble, Clock 2: LSB nibble).
+      ui_in[3:0]: 4-bit data bus (data_in[3:0]) for sequential nibble ingestion (Clock 1: MSB nibble, Clock 2: LSB nibble).
 
-ui_in[7:4]: Write Address bus bits A3 down to A0 (dec_wr_addr[3:0]).
+      ui_in[7:4]: Write Address bus bits A3 down to A0 (dec_wr_addr[3:0]).
 
 2. Bidirectional IOs configured as Inputs (uio_in[7:0]):
 
-uio_in[0]: Write Address MSB bit A4 (dec_wr_addr[4]).
+      uio_in[0]: Write Address MSB bit A4 (dec_wr_addr[4]).
 
-uio_in[2:1]: Bus control strobes (uio_in[1] = wen write enable, uio_in[2] = ren read enable).
+      uio_in[2:1]: Bus control strobes (uio_in[1] = wen write enable, uio_in[2] = ren read enable).
 
-uio_in[6:3]: Read Address bus bits A3 down to A0 (dec_rd_addr[3:0]).
+      uio_in[6:3]: Read Address bus bits A3 down to A0 (dec_rd_addr[3:0]).
 
-uio_in[7]: Read Address MSB bit A4 (dec_rd_addr[4]).
+      uio_in[7]: Read Address MSB bit A4 (dec_rd_addr[4]).
 
 3. Dedicated Outputs (uo_out[7:0]):
 
-uo_out[7:0]: 8-bit parallel decrypted data output bus (data_out[7:0]).
+      uo_out[7:0]: 8-bit parallel decrypted data output bus (data_out[7:0]).
 
 4. Global Control & Unused Pins:
 
-clk, rst_n, ena: System clock, active-low reset, and active-high chip select (cs).
+      clk, rst_n, ena: System clock, active-low reset, and active-high chip select (cs).
 
-uio_out[7:0], uio_oe[7:0]: Tied to 0x00 (bidirectional ports configured strictly as inputs).
+      uio_out[7:0], uio_oe[7:0]: Tied to 0x00 (bidirectional ports configured strictly as inputs).
 
 ==>> Architecture & Functional Specification:
 <img width="1622" height="647" alt="Screenshot 2026-10-13 at 2 19 59 PM" src="https://github.com/user-attachments/assets/9c7e6b54-5a18-489f-876f-b29dd55055e1" />
 
 Section 1: Control Pins, Ingestion & 8-Bit XOR Engine
-Input Signal Interfacing: Handles primary control inputs (clk, rst_n, ena/cs) and the 4-bit data bus (ui_in[3:0]/data_in[3:0]).
+      Input Signal Interfacing: Handles primary control inputs (clk, rst_n, ena/cs) and the 4-bit data bus (ui_in[3:0]/data_in[3:0]).
 
-Ingestion Buffering & Phase Tagging: Samples the incoming 4-bit nibble into an internal buffer register (msb_buf) on Clock 1 and uses a phase tracker (nibble_phase) to concatenate the full 8-bit byte upon arrival of the lower nibble on Clock 2.
+      Ingestion Buffering & Phase Tagging: Samples the incoming 4-bit nibble into an internal buffer register (msb_buf) on Clock 1 and uses a phase tracker (nibble_phase) to concatenate the full 8-bit byte upon arrival of       the lower nibble on Clock 2.
 
-Parallel XOR Encryption: Passes the assembled 8-bit vector into an 8-bit parallel XOR encryption engine keyed with the symmetric secret key 0xAA (8'b1010_1010).
+      Parallel XOR Encryption: Passes the assembled 8-bit vector into an 8-bit parallel XOR encryption engine keyed with the symmetric secret key 0xAA (8'b1010_1010).
 
 Encrypted Bus Driving: Emits the encrypted 8-bit payload onto a dedicated parallel internal data bus (pins [7:0]) directed to the memory matrix.
 
