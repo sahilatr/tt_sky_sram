@@ -128,22 +128,38 @@ Hardware Behavior: If chip select is dropped (!cs) or read enable goes low (!ren
 
 ## How to test
 Phase 1: Reset and Clock Setup:
-            Start the free-running system clock (clk).
-            Assert rst_n = 0 with ena = 1 for 2 to 10 cycles to clear internal registers (msb_buf, nibble_phase, uo_out).
-            Release reset by setting rst_n = 1 on a falling clock edge.
+
+Start the free-running system clock (clk).
+
+Assert rst_n = 0 with ena = 1 for 2 to 10 cycles to clear internal registers (msb_buf, nibble_phase, uo_out).
+
+Release reset by setting rst_n = 1 on a falling clock edge.
+
 Phase 2: Write Cycle (2 Clock Cycles):
-            Clock 1: Set wen = 1 (uio_in[1] = 1), drive write address on ui_in[7:4] ($A_3:A_0$) and uio_in[0] = 0 ($A_4$), and provide the MSB data nibble on ui_in[3:0]. The core buffers this into msb_buf.   
-            Clock 2: Provide the LSB data nibble on ui_in[3:0]. The core assembles both nibbles, encrypts the byte with key 0xAA, and commits it through the 128-pin joint matrix into the target SRAM row.   
-            Clear wen = 0 after Clock 2 to return to standby.   
-Phase 3: Read Cycle (1 Clock Cycle)
-            Set ren = 1 (uio_in[2] = 1), drive read address on uio_in[6:3] ($A_3:A_0$) and uio_in[7] = 0 ($A_4$).   
-            The 5:32 read decoder activates the target wordline, routes the encrypted byte through the 128-pin joint matrix onto the read bitlines, and decrypts it with key 0xAA.   
-            Sample uo_out[7:0] on the next clock edge and verify it matches the original plaintext byte (e.g., 0xC3).
-            Clear ren = 0 to return the output bus to 0x00.
-Phase 4: Simultaneous Write and Read Test
-            Assert both wen = 1 and ren = 1 together.   
-            Write a new byte to a target address (e.g., Address 8) while reading back previously stored data from another address (e.g., Address 5).   
-            Verify that uo_out[7:0] outputs the correct decrypted byte on the write-commit clock edge without data contention.  
+
+Clock 1: Set wen = 1 (uio_in[1] = 1), drive write address on ui_in[7:4] ($A_3:A_0$) and uio_in[0] = 0 ($A_4$), and provide the MSB data nibble on ui_in[3:0]. The core buffers this into msb_buf.  
+
+Clock 2: Provide the LSB data nibble on ui_in[3:0]. The core assembles both nibbles, encrypts the byte with key 0xAA, and commits it through the 128-pin joint matrix into the target SRAM row.   
+
+Clear wen = 0 after Clock 2 to return to standby.   
+
+Phase 3: Read Cycle (1 Clock Cycle):
+
+Set ren = 1 (uio_in[2] = 1), drive read address on uio_in[6:3] ($A_3:A_0$) and uio_in[7] = 0 ($A_4$).   
+
+The 5:32 read decoder activates the target wordline, routes the encrypted byte through the 128-pin joint matrix onto the read bitlines, and decrypts it with key 0xAA.   
+
+Sample uo_out[7:0] on the next clock edge and verify it matches the original plaintext byte (e.g., 0xC3).
+
+Clear ren = 0 to return the output bus to 0x00.
+
+Phase 4: Simultaneous Write and Read Test:
+
+Assert both wen = 1 and ren = 1 together.   
+
+Write a new byte to a target address (e.g., Address 8) while reading back previously stored data from another address (e.g., Address 5).   
+
+Verify that uo_out[7:0] outputs the correct decrypted byte on the write-commit clock edge without data contention.  
 
 ## External hardware
 
