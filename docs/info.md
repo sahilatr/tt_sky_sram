@@ -79,7 +79,51 @@ Read Cycle Timing: Read operations execute in 1 clock cycle, reading and decrypt
 Synchronous & Reset Control: All sequential logic updates synchronously on the rising edge of clk, with clean initialization governed by the active-low reset rst_n.
 
 ==>> Condition-Driven Finite State Machine(FSM):
-<img width="767" height="789" alt="Screenshot 2026-10-13 at 2 23 13 PM" src="https://github.com/user-attachments/assets/e5d5ec4f-ead0-4059-8cdf-f2e91050156e" />
+
+<img width="789" height="884" alt="Screenshot 2026-10-13 at 2 41 31 PM" src="https://github.com/user-attachments/assets/32da50fc-cc7c-42cc-a116-2c32d7571f76" />
+
+
+Transition 1: IDLE / RESET to WRITE_MSB
+
+Trigger Condition: cs and wen and !nibble_phase
+
+Hardware Behavior: When chip select (cs / ena) and write enable (wen / uio_in[1]) are active while the controller is not in a write sequence (!nibble_phase), the rising clock edge latches the upper 4 bits from the data bus (ui_in[3:0]) into the internal register msb_buf.
+
+Phase Flag Update: The controller asserts the sequential phase flag (nibble_phase <= 1) to mark that the high nibble is buffered and the system is ready for the second half.
+
+Transition 2: WRITE_MSB to WRITE_COMMIT
+
+Trigger Condition: addr_ready_flag and nibble_phase
+
+Hardware Behavior: On the following clock cycle, the lower 4 bits arrive on ui_in[3:0]. The 5:32 write decoder evaluates the address, validating access through addr_ready_flag = |wr_wordline and (dec_wr_addr < 16).
+
+Cipher and Memory Write: The buffered msb_buf and incoming lower nibble concatenate into a full 8-bit byte ({msb_buf, data_in}), which is instantly encrypted in parallel using key 0xAA and stored into the targeted byte slice of mem_cells via the joint connection matrix.
+
+Phase Flag Reset: The phase register resets to zero (nibble_phase <= 0), completing the 2-cycle write operation.
+
+Transition 3: WRITE_COMMIT to s_standby
+
+Trigger Condition: !wen or commit_done
+
+Hardware Behavior: Once write enable is de-asserted (!wen) or the write commit cycle finishes, the system moves directly into the s_standby state.
+
+Data Isolation: All wordline write enables drop low across the joint matrix, isolating the internal flip-flops from the external inputs and ensuring the stored ciphertext is securely held without risk of overwrite.
+
+Transition 4: s_standby to PARALLEL READ
+
+Trigger Condition: cs and ren
+
+Hardware Behavior: While holding data in standby, asserting read enable (ren / uio_in[2]) along with chip select (cs) immediately triggers the read path.
+
+Decoder Line Selection: The 5:32 read decoder evaluates dec_rd_addr (uio_in[7:3]). As long as access is valid (dec_rd_addr < 16), it asserts 8 read-select lines across the joint matrix to route the stored byte directly onto the shared 8-bit read bitlines (rd_bitline).
+
+Deterministic 1-Clock Readout: The encrypted byte passes directly into the parallel XOR decryption block, restoring the plaintext data onto output pins uo_out[7:0] in exactly 1 single clock cycle.
+
+Return to Default / Idle
+
+Trigger Condition: !cs or !ren
+
+Hardware Behavior: If chip select is dropped (!cs) or read enable goes low (!ren), the output bus safely resets to zero (uo_out <= 0x00), returning the module to IDLE or retaining state in s_standby.
 
 
 ## How to test
