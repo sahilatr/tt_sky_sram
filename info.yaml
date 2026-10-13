@@ -1,9 +1,9 @@
 # Tiny Tapeout project information
 project:
   title:        "QSPI_SRAM"      # Project title
-  author:       "Sah"      # Your name
+  author:       "SAHIL SEXSENA, VARALAKSHMI S KULAL, SHOBHIT JAISWAL, SOUMYARANI, DARSHAN AS"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "abs"      # One line description of what your project does
+  description:  "A secure 16-bytes QSPI SRAM implemented on SkyWater 130nm for Tiny Tapeout. It integrates an on-chip 8-bit parallel XOR cipher engine and dual 5:32 decoders, interfacing with a 128-pin joint matrix to execute concurrent, single-cycle read and two-cycle write operations with hardware-level boundary protection."      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     100000000       # Clock frequency in Hz (or 0 if not applicable)
 
@@ -11,7 +11,7 @@ project:
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_example"
+  top_module:  "tt_qspi_sram"
 
   # List your project's source files here.
   # Source files must be in ./src and you must list each source file separately, one per line.
