@@ -125,18 +125,6 @@ Trigger Condition: !cs or !ren
 
 Hardware Behavior: If chip select is dropped (!cs) or read enable goes low (!ren), the output bus safely resets to zero (uo_out <= 0x00), returning the module to IDLE or retaining state in s_standby.
 
-Decoupled Operational States Callout
-Clock-Independent Retention:
-
-Inside s_standby, the memory core maintains latched data indefinitely without needing continuous clock strobes, refresh pulses, or bus activity.
-
-Arbitrary Idle Intervals:
-
-The module can remain parked in standby across any number of cycles until a new write or read strobe is requested.
-
-Glitch and Hazard Isolation:
-
-By decoupling the write commit from the read pathway, the memory matrix guarantees clean, race-free operation between consecutive read and write operations.
 
 ## How to test
 Reset & Clock Setup: Initialize the system by asserting the active-low reset (rst_n) and supplying stable clock signals (clk).  
