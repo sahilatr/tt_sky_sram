@@ -8,15 +8,79 @@ You can also include images in this folder and reference them in the markdown. E
 -->
 
 ## How it works
-Architecture Overview:The project implements a secure QSPI SRAM Architecture as a Single-Module ASIC featuring a 128-pin Joint Connection Matrix and a 16x8-bit SRAM core.
+==>> Pinout Grouping & Bus Summary:
+1. Dedicated Inputs (ui_in[7:0]):
 
-section 1: (Control Pins, Ingestion & 8-Bit XOR Engine): Handles input signals (clks, active-low reset 'rst_n', enables 'en', and 4-bit data inputs in[3:0]), buffering them through buffer and phase tagging before passing them to an 8-bit XOR encryption engine using key to produce encrypted data 8 pins (0:7).
+ui_in[3:0]: 4-bit data bus (data_in[3:0]) for sequential nibble ingestion (Clock 1: MSB nibble, Clock 2: LSB nibble).
 
-Section 2: (write 5:32 Decoder & Bitlines enable): Manages write operations using a full 5:32 write decoder driven by 5 address pins (A0 to A3 on ui_in[7:4] and A4 on uio_in[0]). For the current 16-byte implementation, the host/user sets A4 = 0 (dec_wr_addr < 16), qualifying the access so that wordlines 0–15 fire and assert 128 write-enable lines across the 128-pin that bridge directly to the SRAM core via the 128-pin joint connection. If the user drives A4 = 1 (dec_wr_addr >= 16), addr_ready_flag evaluates to 0, preventing out-of-bounds writes and protecting memory from corruption. This preserves the complete 5:32 hardware decoding structure on silicon, leaving full architectural support reserved to scale to an additional 16 bytes (32 bytes total) without altering the top-level interface.
+ui_in[7:4]: Write Address bus bits A3 down to A0 (dec_wr_addr[3:0]).
 
-Section 3: (Read 5:32 Decoder & Bitlines enable): Manages read operations using a full 5:32 read decoder driven by 5 address pins (A0 to A3 on uio_in[6:3] and A4 on uio_in[7]). For the current 16-byte implementation, the host/user sets A4 = 0 (dec_rd_addr < 16), qualifying the access so that wordlines 0–15 fire and assert 128 read-select lines across the 128-pin that bridge directly to the SRAM core via the 128-pin joint connection. If the user drives A4 = 1 (dec_rd_addr >= 16), read access is qualified out, preventing out-of-bounds reads and returning safe default values. This preserves the complete 5:32 hardware decoding structure on silicon, leaving full architectural support reserved to scale to an additional 16 bytes (32 bytes total) without altering the top-level interface, and then passing data through an XOR decryption block to generate an 8-bit parallel output (8b1100_0011/0xC3).
+2. Bidirectional IOs configured as Inputs (uio_in[7:0]):
 
-Clock Timing: Write operations take 2 clock cycles, while read operations take 1 clock cycle, controlled via synchronous clock inputs and an active-low reset (rst_n). 
+uio_in[0]: Write Address MSB bit A4 (dec_wr_addr[4]).
+
+uio_in[2:1]: Bus control strobes (uio_in[1] = wen write enable, uio_in[2] = ren read enable).
+
+uio_in[6:3]: Read Address bus bits A3 down to A0 (dec_rd_addr[3:0]).
+
+uio_in[7]: Read Address MSB bit A4 (dec_rd_addr[4]).
+
+3. Dedicated Outputs (uo_out[7:0]):
+
+uo_out[7:0]: 8-bit parallel decrypted data output bus (data_out[7:0]).
+
+4. Global Control & Unused Pins:
+
+clk, rst_n, ena: System clock, active-low reset, and active-high chip select (cs).
+
+uio_out[7:0], uio_oe[7:0]: Tied to 0x00 (bidirectional ports configured strictly as inputs).
+
+==>> Architecture & Functional Specification:
+<img width="1622" height="647" alt="Screenshot 2026-10-13 at 2 19 59 PM" src="https://github.com/user-attachments/assets/9c7e6b54-5a18-489f-876f-b29dd55055e1" />
+
+Section 1: Control Pins, Ingestion & 8-Bit XOR Engine
+Input Signal Interfacing: Handles primary control inputs (clk, rst_n, ena/cs) and the 4-bit data bus (ui_in[3:0]/data_in[3:0]).
+
+Ingestion Buffering & Phase Tagging: Samples the incoming 4-bit nibble into an internal buffer register (msb_buf) on Clock 1 and uses a phase tracker (nibble_phase) to concatenate the full 8-bit byte upon arrival of the lower nibble on Clock 2.
+
+Parallel XOR Encryption: Passes the assembled 8-bit vector into an 8-bit parallel XOR encryption engine keyed with the symmetric secret key 0xAA (8'b1010_1010).
+
+Encrypted Bus Driving: Emits the encrypted 8-bit payload onto a dedicated parallel internal data bus (pins [7:0]) directed to the memory matrix.
+
+Section 2: Write [5:32] Decoder & Bitline Enables
+Full 5-Bit Address Decoding: Manages memory write operations using a physical [5:32] write decoder driven by the combined 5-bit address bus {uio_in[0], ui_in[7:4]} (A4 down to A0).
+
+Valid Range Operation (MSB = 0): For the 16-byte memory implementation, the host sets the MSB bit A4 = 0 (dec_wr_addr < 16), which asserts decoded wordlines 0 through 15.
+
+128-Pin Write Joint Connection: The 16 active wordlines expand into 128 parallel write-enable lines across the 128-pin joint matrix that bridges directly into the SRAM core.
+
+Out-of-Bounds Memory Protection (MSB = 1): If the user sets the MSB bit A4 = 1 (dec_wr_addr >= 16), the hardware address qualification check sets addr_ready_flag to 0, gating all write wordlines and preventing memory corruption.
+
+Silicon Scalability Reservation: Retains the complete 5:32 physical decoder structure on silicon, leaving full architectural capability reserved to scale to 32 bytes without altering top-level pinout mappings.
+
+Section 3: Read [5:32] Decoder & Bitline Enables
+Decoder-Driven Read Architecture: Controls read operations using a symmetric [5:32] read decoder—without multiplexer trees—driven by the combined 5-bit address bus {uio_in[7], uio_in[6:3]} (A4 down to A0).
+
+Valid Read Operation (MSB = 0): When the host sets the MSB bit A4 = 0 (dec_rd_addr < 16), the decoder asserts 1 of 16 wordlines, driving 8 dedicated read-select lines across the 128-pin joint connection matrix for the target byte.
+
+Direct Encrypted Data Collection: Gated bit-cells route the 8-bit encrypted data directly from the 128-pin joint matrix onto the read bitline bus in parallel.
+
+Out-of-Bounds Safe Readout (MSB = 1): If the user sets the MSB bit A4 = 1 (dec_rd_addr >= 16), read access is invalidated, returning safe default zero values (0x00) and preventing unmapped reads.
+
+Symmetric Scalability Reservation: Retains the complete 5:32 read decoder structure in hardware, maintaining architectural capability for expanding to 32 bytes without interface changes.
+
+Parallel XOR Decryption Output: Directs the collected 8-bit encrypted data through the parallel XOR decryption block using key 0xAA, driving valid plaintext (e.g., 8'b1100_0011 / 0xC3) on the output bus uo_out[7:0].
+
+==>> Clock Timing & Synchronization:
+Write Cycle Timing: Write operations take 2 clock cycles (Clock 1 buffers the MSB nibble; Clock 2 receives the LSB nibble, encrypts the byte, and commits it to memory).
+
+Read Cycle Timing: Read operations execute in 1 clock cycle, reading and decrypting the data in parallel without pipeline latency.
+
+Synchronous & Reset Control: All sequential logic updates synchronously on the rising edge of clk, with clean initialization governed by the active-low reset rst_n.
+
+==>> Condition-Driven Finite State Machine(FSM):
+<img width="767" height="789" alt="Screenshot 2026-10-13 at 2 23 13 PM" src="https://github.com/user-attachments/assets/e5d5ec4f-ead0-4059-8cdf-f2e91050156e" />
+
 
 ## How to test
 Reset & Clock Setup: Initialize the system by asserting the active-low reset (rst_n) and supplying stable clock signals (clk).  
