@@ -8,7 +8,7 @@ You can also include images in this folder and reference them in the markdown. E
 -->
 
 ## How it works
-# Pinout Grouping & Bus Summary:
+### Pinout Grouping & Bus Summary:
 1. Dedicated Inputs (ui_in[7:0]):
 
       ui_in[3:0]: 4-bit data bus (data_in[3:0]) for sequential nibble ingestion (Clock 1: MSB nibble, Clock 2: LSB nibble).
@@ -35,7 +35,7 @@ You can also include images in this folder and reference them in the markdown. E
 
       uio_out[7:0], uio_oe[7:0]: Tied to 0x00 (bidirectional ports configured strictly as inputs).
 
-==>> Architecture & Functional Specification:
+### Architecture & Functional Specification:
 <img width="1622" height="647" alt="Screenshot 2026-10-13 at 2 19 59 PM" src="https://github.com/user-attachments/assets/9c7e6b54-5a18-489f-876f-b29dd55055e1" />
 
 Section 1: Control Pins, Ingestion & 8-Bit XOR Engine
@@ -71,14 +71,14 @@ Symmetric Scalability Reservation: Retains the complete 5:32 read decoder struct
 
 Parallel XOR Decryption Output: Directs the collected 8-bit encrypted data through the parallel XOR decryption block using key 0xAA, driving valid plaintext (e.g., 8'b1100_0011 / 0xC3) on the output bus uo_out[7:0].
 
-==>> Clock Timing & Synchronization:
+### Clock Timing & Synchronization:
 Write Cycle Timing: Write operations take 2 clock cycles (Clock 1 buffers the MSB nibble; Clock 2 receives the LSB nibble, encrypts the byte, and commits it to memory).
 
 Read Cycle Timing: Read operations execute in 1 clock cycle, reading and decrypting the data in parallel without pipeline latency.
 
 Synchronous & Reset Control: All sequential logic updates synchronously on the rising edge of clk, with clean initialization governed by the active-low reset rst_n.
 
-==>> Condition-Driven Finite State Machine(FSM):
+### Condition-Driven Finite State Machine(FSM):
 
 <img width="789" height="884" alt="Screenshot 2026-10-13 at 2 41 31 PM" src="https://github.com/user-attachments/assets/32da50fc-cc7c-42cc-a116-2c32d7571f76" />
 
