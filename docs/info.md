@@ -8,7 +8,7 @@ You can also include images in this folder and reference them in the markdown. E
 -->
 
 ## How it works
-==>> Pinout Grouping & Bus Summary:
+# Pinout Grouping & Bus Summary:
 1. Dedicated Inputs (ui_in[7:0]):
 
       ui_in[3:0]: 4-bit data bus (data_in[3:0]) for sequential nibble ingestion (Clock 1: MSB nibble, Clock 2: LSB nibble).
