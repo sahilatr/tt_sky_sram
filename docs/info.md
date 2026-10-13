@@ -71,7 +71,7 @@ Symmetric Scalability Reservation: Retains the complete 5:32 read decoder struct
 
 Parallel XOR Decryption Output: Directs the collected 8-bit encrypted data through the parallel XOR decryption block using key 0xAA, driving valid plaintext (e.g., 8'b1100_0011 / 0xC3) on the output bus uo_out[7:0].
 
-==>> Clock Timing & Synchronization:
+$\rightarrow$ Clock Timing & Synchronization:
 Write Cycle Timing: Write operations take 2 clock cycles (Clock 1 buffers the MSB nibble; Clock 2 receives the LSB nibble, encrypts the byte, and commits it to memory).
 
 Read Cycle Timing: Read operations execute in 1 clock cycle, reading and decrypting the data in parallel without pipeline latency.
